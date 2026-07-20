@@ -5,6 +5,9 @@ import Pagination from "@/components/Pagination";
 import { logger } from "@/lib/logger";
 import WelcomeModal from "@/components/WelcomeModal";
 
+// ⚡ Force dynamic rendering agar search & pagination selalu diambil langsung dari API
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   searchParams: Promise<{ q?: string; page?: string }>;
 }
