@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
+// Force Next.js untuk memperlakukan route ini sebagai server-side dynamic
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
   try {
     const { username, email, password } = await req.json();
@@ -22,7 +25,6 @@ export async function POST(req: Request) {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // 💡 DI-FIX: Menggunakan 'passwordHash' sesuai skema Prisma baru, bukan 'password'
     const user = await prisma.user.create({
       data: {
         username,
