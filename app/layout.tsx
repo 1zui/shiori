@@ -19,6 +19,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "SHIORI - Comic Library",
   description: "Read your favorite manga & manhwa",
+  referrer: "no-referrer", // 👈 BYPASS HOTLINK MANGADEX UNTUK SELURUH HALAMAN & KOMPONEN
 };
 
 export default function RootLayout({
