@@ -1,9 +1,11 @@
-// app/library/page.tsx
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+
+// Force dynamic rendering agar build Vercel tidak bermasalah saat mengecek sesi/database
+export const dynamic = "force-dynamic";
 
 interface AuthenticatedUser {
   id: string;
@@ -88,6 +90,7 @@ export default async function LibraryPage() {
                         "https://placehold.co/100x150/1e293b/fff?text=No+Cover"
                       }
                       alt=""
+                      referrerPolicy="no-referrer" // 👈 BYPASS HOTLINK MANGADEX
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
@@ -156,6 +159,7 @@ export default async function LibraryPage() {
                     <img
                       src={book.coverUrl}
                       alt={book.title}
+                      referrerPolicy="no-referrer" // 👈 BYPASS HOTLINK MANGADEX
                       className="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-500"
                       loading="lazy"
                     />

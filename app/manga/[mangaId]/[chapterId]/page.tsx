@@ -1,9 +1,15 @@
-// app/manga/[mangaId]/[chapterId]/page.tsx
-import { getMangaDetail, getChapterImages, getMangaChapters } from "@/lib/mangadex";
+import {
+  getMangaDetail,
+  getChapterImages,
+  getMangaChapters,
+} from "@/lib/mangadex";
 import HistoryTracker from "@/components/HistoryTracker";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Link from "next/link";
+
+// Force dynamic rendering agar build Vercel tidak bermasalah saat fetching data eksternal
+export const dynamic = "force-dynamic";
 
 interface ChapterPageProps {
   params: Promise<{ mangaId: string; chapterId: string }>;
@@ -22,10 +28,15 @@ export default async function ChapterReaderPage({ params }: ChapterPageProps) {
 
   const manga = mangaResult.status === "fulfilled" ? mangaResult.value : null;
   const images = imagesResult.status === "fulfilled" ? imagesResult.value : [];
-  const chapters = chaptersResult.status === "fulfilled" ? chaptersResult.value : [];
+  const chapters =
+    chaptersResult.status === "fulfilled" ? chaptersResult.value : [];
 
   if (!manga) {
-    return <div className="p-10 text-center text-slate-400">Manga data template untraceable.</div>;
+    return (
+      <div className="p-10 text-center text-slate-400">
+        Manga data template untraceable.
+      </div>
+    );
   }
 
   // ─── 💡 RE-APPLY SMART DEDUPLICATION LOGIC FOR ACCURATE ORDER ───
@@ -35,10 +46,13 @@ export default async function ChapterReaderPage({ params }: ChapterPageProps) {
     return 1;
   };
 
-  const uniqueChaptersMap: Record<string, typeof chapters[number]> = {};
+  const uniqueChaptersMap: Record<string, (typeof chapters)[number]> = {};
   chapters.forEach((chap) => {
     const existing = uniqueChaptersMap[chap.chapter];
-    if (!existing || getLangPriority(chap.language) > getLangPriority(existing.language)) {
+    if (
+      !existing ||
+      getLangPriority(chap.language) > getLangPriority(existing.language)
+    ) {
       uniqueChaptersMap[chap.chapter] = chap;
     }
   });
@@ -52,28 +66,41 @@ export default async function ChapterReaderPage({ params }: ChapterPageProps) {
   const currentChapterIdx = sortedChapters.findIndex((c) => c.id === chapterId);
   const currentChapter = sortedChapters[currentChapterIdx];
 
-  const prevChapter = currentChapterIdx > 0 ? sortedChapters[currentChapterIdx - 1] : null;
-  const nextChapter = currentChapterIdx < sortedChapters.length - 1 ? sortedChapters[currentChapterIdx + 1] : null;
+  const prevChapter =
+    currentChapterIdx > 0 ? sortedChapters[currentChapterIdx - 1] : null;
+  const nextChapter =
+    currentChapterIdx < sortedChapters.length - 1
+      ? sortedChapters[currentChapterIdx + 1]
+      : null;
 
   return (
     <main className="min-h-screen bg-[#09090b] text-slate-200 p-4 flex flex-col items-center">
-      
       {/* 1. TOP NAVIGATION CONTROLS */}
       <header className="w-full max-w-3xl border-b border-neutral-900 pb-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="text-center sm:text-left">
-          <Link href={`/manga/${mangaId}`} className="text-xs font-bold text-orange-500 hover:underline">
+          <Link
+            href={`/manga/${mangaId}`}
+            className="text-xs font-bold text-orange-500 hover:underline"
+          >
             ← Kembali ke Detail
           </Link>
-          <h1 className="text-sm font-black text-white mt-0.5 line-clamp-1">{manga.title}</h1>
+          <h1 className="text-sm font-black text-white mt-0.5 line-clamp-1">
+            {manga.title}
+          </h1>
           {currentChapter && (
-            <p className="text-[11px] text-neutral-400 font-bold">Chapter {currentChapter.chapter} [{currentChapter.language}]</p>
+            <p className="text-[11px] text-neutral-400 font-bold">
+              Chapter {currentChapter.chapter} [{currentChapter.language}]
+            </p>
           )}
         </div>
 
         {/* Top Pagination Buttons */}
         <div className="flex items-center gap-2">
           {prevChapter ? (
-            <Link href={`/manga/${mangaId}/${prevChapter.id}`} className="px-4 py-2 bg-[#121215] border border-neutral-850 rounded-xl text-xs font-bold hover:bg-neutral-800 transition-colors">
+            <Link
+              href={`/manga/${mangaId}/${prevChapter.id}`}
+              className="px-4 py-2 bg-[#121215] border border-neutral-850 rounded-xl text-xs font-bold hover:bg-neutral-800 transition-colors"
+            >
               Prev
             </Link>
           ) : (
@@ -83,7 +110,10 @@ export default async function ChapterReaderPage({ params }: ChapterPageProps) {
           )}
 
           {nextChapter ? (
-            <Link href={`/manga/${mangaId}/${nextChapter.id}`} className="px-5 py-2 bg-orange-650 hover:bg-orange-600 rounded-xl text-xs font-black text-white transition-colors shadow-md shadow-orange-950/20">
+            <Link
+              href={`/manga/${mangaId}/${nextChapter.id}`}
+              className="px-5 py-2 bg-orange-650 hover:bg-orange-600 rounded-xl text-xs font-black text-white transition-colors shadow-md shadow-orange-950/20"
+            >
               Next Chapter →
             </Link>
           ) : (
@@ -103,12 +133,13 @@ export default async function ChapterReaderPage({ params }: ChapterPageProps) {
         ) : (
           images.map((url, index) => (
             // eslint-disable-next-line @next/next/no-img-element
-            <img 
-              key={index} 
-              src={url} 
-              alt={`Page ${index + 1}`} 
-              className="w-full h-auto object-contain select-none pointer-events-none" 
-              loading={index <= 2 ? "eager" : "lazy"} 
+            <img
+              key={index}
+              src={url}
+              alt={`Page ${index + 1}`}
+              referrerPolicy="no-referrer" // 👈 BYPASS HOTLINK MANGADEX
+              className="w-full h-auto object-contain select-none pointer-events-none"
+              loading={index <= 2 ? "eager" : "lazy"}
             />
           ))
         )}
@@ -116,21 +147,32 @@ export default async function ChapterReaderPage({ params }: ChapterPageProps) {
 
       {/* 3. BOTTOM NAVIGATION CONTROLS (FOOTER) */}
       <footer className="w-full max-w-3xl border-t border-neutral-900 pt-6 mt-8 flex flex-col items-center gap-4 pb-12">
-        <p className="text-xs text-neutral-500 font-bold">Kamu telah selesai membaca bab ini.</p>
-        
+        <p className="text-xs text-neutral-500 font-bold">
+          Kamu telah selesai membaca bab ini.
+        </p>
+
         <div className="flex items-center gap-3 w-full justify-center">
           {prevChapter && (
-            <Link href={`/manga/${mangaId}/${prevChapter.id}`} className="px-6 py-3 bg-[#121215] border border-neutral-850 rounded-xl text-xs font-bold hover:bg-neutral-800 transition-colors">
+            <Link
+              href={`/manga/${mangaId}/${prevChapter.id}`}
+              className="px-6 py-3 bg-[#121215] border border-neutral-850 rounded-xl text-xs font-bold hover:bg-neutral-800 transition-colors"
+            >
               ← Bab Sebelumnya
             </Link>
           )}
 
-          <Link href={`/manga/${mangaId}`} className="px-6 py-3 bg-neutral-900 border border-neutral-850 rounded-xl text-xs font-bold text-neutral-400 hover:text-white transition-colors">
+          <Link
+            href={`/manga/${mangaId}`}
+            className="px-6 py-3 bg-neutral-900 border border-neutral-850 rounded-xl text-xs font-bold text-neutral-400 hover:text-white transition-colors"
+          >
             Daftar Bab
           </Link>
 
           {nextChapter ? (
-            <Link href={`/manga/${mangaId}/${nextChapter.id}`} className="px-8 py-3 bg-orange-650 hover:bg-orange-600 rounded-xl text-xs font-black text-white transition-colors shadow-lg shadow-orange-950/30">
+            <Link
+              href={`/manga/${mangaId}/${nextChapter.id}`}
+              className="px-8 py-3 bg-orange-650 hover:bg-orange-600 rounded-xl text-xs font-black text-white transition-colors shadow-lg shadow-orange-950/30"
+            >
               Lanjut Chapter →
             </Link>
           ) : (

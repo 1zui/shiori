@@ -24,7 +24,7 @@ export default async function MangaPage({ searchParams }: PageProps) {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10 border-b border-slate-200 dark:border-slate-900 pb-6">
         <div>
           <h1 className="text-3xl font-black tracking-tight flex items-center gap-2">
-             Manga
+            Manga
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             Discover highly popular and trending Japanese Manga collections
@@ -53,6 +53,7 @@ export default async function MangaPage({ searchParams }: PageProps) {
                       <img
                         src={manga.cover}
                         alt={manga.title}
+                        referrerPolicy="no-referrer" // 👈 BYPASS HOTLINK PROTECTION MANGADEX
                         className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                         loading="lazy"
                       />
@@ -95,6 +96,7 @@ export default async function MangaPage({ searchParams }: PageProps) {
                   <img
                     src={manga.cover}
                     alt={manga.title}
+                    referrerPolicy="no-referrer" // 👈 BYPASS HOTLINK PROTECTION MANGADEX
                     className="object-cover w-full h-full"
                   />
                 </div>

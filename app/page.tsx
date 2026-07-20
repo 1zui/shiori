@@ -3,7 +3,7 @@ import { getMixedPopularManga, getPopularManga } from "@/lib/mangadex";
 import Link from "next/link";
 import Pagination from "@/components/Pagination";
 import { logger } from "@/lib/logger";
-import WelcomeModal from "@/components/WelcomeModal"; // 👈 Import WelcomeModal
+import WelcomeModal from "@/components/WelcomeModal";
 
 interface PageProps {
   searchParams: Promise<{ q?: string; page?: string }>;
@@ -98,6 +98,7 @@ export default async function HomePage({ searchParams }: PageProps) {
                       <img
                         src={item.cover}
                         alt={item.title}
+                        referrerPolicy="no-referrer" // 👈 BYPASS HOTLINK PROTECTION MANGADEX
                         className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                         loading="lazy"
                       />
@@ -151,6 +152,7 @@ export default async function HomePage({ searchParams }: PageProps) {
                     <img
                       src={manga.cover}
                       alt={manga.title}
+                      referrerPolicy="no-referrer" // 👈 BYPASS HOTLINK PROTECTION MANGADEX
                       className="object-cover w-full h-full"
                     />
                   </div>

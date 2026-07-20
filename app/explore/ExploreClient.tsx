@@ -1,131 +1,112 @@
-// app/explore/actions.ts
-"use server";
+"use client";
 
-import dns from "dns";
+import { useState, useTransition } from "react";
+import Link from "next/link";
+import { fetchMangaFromDexServer, ExploreMangaItem } from "./actions";
 
-try {
-  dns.setDefaultResultOrder("ipv4first");
-} catch {
-  // Menggunakan optional catch binding tanpa variabel untuk mematuhi aturan eslint no-unused-vars
+interface ExploreClientProps {
+  initialItems?: ExploreMangaItem[];
+  initialData?: { items: ExploreMangaItem[] };
+  initialGenre?: string;
 }
 
-export interface ExploreMangaItem {
-  id: string;
-  title: string;
-  coverUrl: string;
-}
+const GENRES = [
+  { id: "action", name: "Action" },
+  { id: "adventure", name: "Adventure" },
+  { id: "comedy", name: "Comedy" },
+  { id: "drama", name: "Drama" },
+  { id: "fantasy", name: "Fantasy" },
+  { id: "horror", name: "Horror" },
+  { id: "mystery", name: "Mystery" },
+  { id: "romance", name: "Romance" },
+  { id: "sci-fi", name: "Sci-Fi" },
+];
 
-interface DexRelationship {
-  id: string;
-  type: string;
-  attributes?: {
-    fileName?: string;
-  };
-}
+export default function ExploreClient({
+  initialItems = [],
+  initialData,
+  initialGenre = "action",
+}: ExploreClientProps) {
+  const defaultList = initialData?.items || initialItems || [];
+  const [items, setItems] = useState<ExploreMangaItem[]>(defaultList);
+  const [selectedGenre, setSelectedGenre] = useState<string>(initialGenre);
+  const [isPending, startTransition] = useTransition();
 
-interface DexMangaItem {
-  id: string;
-  type: string;
-  attributes?: {
-    title?: Record<string, string>;
-  };
-  relationships?: DexRelationship[];
-}
+  const handleGenreChange = (genreId: string) => {
+    setSelectedGenre(genreId);
+    startTransition(async () => {
+      // 💡 GUNAKAN 'unknown' SEBAGAI PENGGANTI 'any' UNTUK MEMATUHI ESLINT
+      const res: unknown = await fetchMangaFromDexServer(genreId);
 
-const GENRE_UUID_MAP: Record<string, string> = {
-  action: "391b0423-db21-4d90-8d5d-0077ccd49732",
-  adventure: "87cc5d0a-87f1-4d72-974d-d779758b3522",
-  comedy: "4d32b4e2-12af-4a99-a710-8b9d47408d29",
-  drama: "b9af3a63-f058-46de-a9a0-e0c139061c8a",
-  fantasy: "cdc58590-57af-4a51-bc1e-d257b1161f36",
-  horror: "cdad7e68-1419-41bb-bd56-9d0473df9d7d",
-  mystery: "ee96339e-2ddd-49a0-ace1-f3b85524018b",
-  romance: "423e2eae-a7a2-4a8b-ac03-a8351462d71d",
-  "sci-fi": "256c827d-a97b-4dec-9a60-188acb590e67",
-  "sci fi": "256c827d-a97b-4dec-9a60-188acb590e67",
-};
-
-// Mengembalikan nama fungsi asli agar kompatibel dengan file ExploreClient.tsx Anda
-export async function fetchMangaFromDexServer(
-  tagId: string,
-  langCode: string = "",
-  limit: number = 20,
-): Promise<ExploreMangaItem[]> {
-  try {
-    const normalizedGenre = tagId ? tagId.toLowerCase().trim() : "";
-
-    // Konversi otomatis dari nama teks biasa ("Action") atau gunakan langsung jika berupa UUID asli
-    const finalTagId = GENRE_UUID_MAP[normalizedGenre] || tagId;
-
-    if (!finalTagId || finalTagId.includes("semua")) {
-      return [];
-    }
-
-    const params = new URLSearchParams();
-    params.append("limit", limit.toString());
-    params.append("includedTags[]", finalTagId);
-    params.append("includes[]", "cover_art");
-
-    // Rating aman yang didukung penuh oleh API MangaDex
-    params.append("contentRating[]", "safe");
-    params.append("contentRating[]", "suggestive");
-    params.append("contentRating[]", "erotica");
-
-    params.append("order[followedCount]", "desc");
-
-    // Jika UI Anda juga mengirimkan filter bahasa/kategori komik
-    if (langCode) {
-      const normalizedLang = langCode.toLowerCase().trim();
-      if (normalizedLang === "manga" || normalizedLang === "ja") {
-        params.append("originalLanguage[]", "ja");
-      } else if (normalizedLang === "manhwa" || normalizedLang === "ko") {
-        params.append("originalLanguage[]", "ko");
-      } else if (normalizedLang === "manhua" || normalizedLang === "zh") {
-        params.append("originalLanguage[]", "zh");
-        params.append("originalLanguage[]", "zh-hk");
+      if (Array.isArray(res)) {
+        setItems(res as ExploreMangaItem[]);
+      } else if (
+        res &&
+        typeof res === "object" &&
+        "items" in res &&
+        Array.isArray((res as { items: unknown }).items)
+      ) {
+        setItems((res as { items: ExploreMangaItem[] }).items);
+      } else {
+        setItems([]);
       }
-    }
-
-    const response = await fetch(
-      `https://api.mangadex.org/manga?${params.toString()}`,
-      {
-        cache: "no-store",
-        headers: {
-          "User-Agent": "SHIORI-App/1.0.0",
-        },
-      },
-    );
-
-    if (!response.ok)
-      throw new Error(`External API HTTP Error: ${response.status}`);
-
-    const json = await response.json();
-    if (!json.data || !Array.isArray(json.data)) return [];
-
-    return json.data.map((manga: DexMangaItem) => {
-      const coverObj = manga.relationships?.find(
-        (r: DexRelationship) => r.type === "cover_art",
-      );
-      const fileName = coverObj?.attributes?.fileName || "";
-      const titleObj = manga.attributes?.title || {};
-      const title =
-        titleObj.en ||
-        titleObj["ja-ro"] ||
-        Object.values(titleObj)[0] ||
-        "Untitled Comic";
-
-      const coverUrl = fileName
-        ? `https://uploads.mangadex.org/covers/${manga.id}/${fileName}.256.jpg`
-        : "https://placehold.co/256x384/121215/ffffff?text=No+Cover";
-
-      return {
-        id: manga.id,
-        title,
-        coverUrl,
-      };
     });
-  } catch (error) {
-    console.error("─── [EXPLORE ENGINE ERROR CORE] ───\n", error);
-    return [];
-  }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Genre Filter Buttons */}
+      <div className="flex flex-wrap gap-2">
+        {GENRES.map((genre) => (
+          <button
+            key={genre.id}
+            onClick={() => handleGenreChange(genre.id)}
+            disabled={isPending}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              selectedGenre === genre.id
+                ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
+                : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+            }`}
+          >
+            {genre.name}
+          </button>
+        ))}
+      </div>
+
+      {/* Manga Grid */}
+      {isPending ? (
+        <div className="py-20 text-center text-sm text-slate-400 animate-pulse">
+          Memuat genre {selectedGenre}...
+        </div>
+      ) : items.length === 0 ? (
+        <div className="py-20 text-center text-sm text-slate-400">
+          Tidak ada komik ditemukan untuk genre ini.
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+          {items.map((item) => (
+            <Link
+              key={item.id}
+              href={`/manga/${item.id}`}
+              className="group block"
+            >
+              <div className="relative aspect-[2/3] w-full rounded-xl overflow-hidden bg-slate-200 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 group-hover:border-orange-500 transition-all shadow-md">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={item.coverUrl}
+                  alt={item.title}
+                  referrerPolicy="no-referrer"
+                  className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
+                />
+              </div>
+              <h3 className="text-xs font-bold mt-2 text-slate-800 dark:text-slate-200 line-clamp-1 group-hover:text-orange-500 transition-colors">
+                {item.title}
+              </h3>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }

@@ -1,11 +1,13 @@
-// app/manga/[mangaId]/page.tsx
 import { getMangaDetail, getMangaChapters } from "@/lib/mangadex";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth"; // 🎯 FIX: Diselaraskan dengan standarisasi lib/auth.ts
+import { authOptions } from "@/lib/auth";
 import BookmarkButton from "@/components/BookmarkButton";
 import MangaReviews from "@/components/MangaReviews";
 import { logger } from "@/lib/logger";
+
+// Force dynamic rendering agar build Vercel tidak bermasalah saat fetching data eksternal
+export const dynamic = "force-dynamic";
 
 interface MangaChapter {
   id: string;
@@ -19,14 +21,18 @@ interface PageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
-export default async function MangaDetailPage({ params, searchParams }: PageProps) {
+export default async function MangaDetailPage({
+  params,
+  searchParams,
+}: PageProps) {
   const resolvedParams = await params;
   const resolvedSearchParams = await searchParams;
   const session = await getServerSession(authOptions);
   const isLoggedIn = !!session;
-  
+
   const paramKeys = Object.keys(resolvedParams);
-  const mangaKey = paramKeys.find(k => k.toLowerCase().includes("manga")) || paramKeys[0];
+  const mangaKey =
+    paramKeys.find((k) => k.toLowerCase().includes("manga")) || paramKeys[0];
   const id = resolvedParams[mangaKey];
 
   const sortOrder = resolvedSearchParams?.sort === "desc" ? "desc" : "asc";
@@ -37,19 +43,24 @@ export default async function MangaDetailPage({ params, searchParams }: PageProp
    */
   const [mangaResult, chaptersResult] = await Promise.allSettled([
     getMangaDetail(id),
-    getMangaChapters(id)
+    getMangaChapters(id),
   ]);
 
   // Ekstraksi data kritikal (Profil Manga)
   const manga = mangaResult.status === "fulfilled" ? mangaResult.value : null;
 
   // 🛡️ Graceful Degradation: Jika data chapter gagal termuat, berikan fallback array kosong
-  const chapters = chaptersResult.status === "fulfilled" 
-    ? (chaptersResult.value as MangaChapter[]) 
-    : [];
+  const chapters =
+    chaptersResult.status === "fulfilled"
+      ? (chaptersResult.value as MangaChapter[])
+      : [];
 
   if (chaptersResult.status === "rejected") {
-    logger.error("MANGA_DETAIL_PAGE", `Gagal memuat feed chapter untuk mangaId: ${id}`, chaptersResult.reason);
+    logger.error(
+      "MANGA_DETAIL_PAGE",
+      `Gagal memuat feed chapter untuk mangaId: ${id}`,
+      chaptersResult.reason,
+    );
   }
 
   // Pengamanan rute jika data utama komik kosong atau tidak ditemukan
@@ -57,9 +68,16 @@ export default async function MangaDetailPage({ params, searchParams }: PageProp
     return (
       <div className="min-h-screen bg-[#121212] flex flex-col items-center justify-center px-6">
         <div className="p-8 rounded-2xl bg-[#1a1a1a] border border-slate-800 text-center max-w-md w-full shadow-2xl">
-          <h2 className="text-lg font-bold text-white mb-2">Comic Profile Unavailable</h2>
-          <p className="text-xs text-slate-400 mb-6">Gagal mengambil informasi dasar komik dari database eksternal.</p>
-          <Link href="/" className="inline-block w-full text-center text-xs font-bold bg-orange-600 text-white py-3 rounded-xl hover:bg-orange-500 transition-colors">
+          <h2 className="text-lg font-bold text-white mb-2">
+            Comic Profile Unavailable
+          </h2>
+          <p className="text-xs text-slate-400 mb-6">
+            Gagal mengambil informasi dasar komik dari database eksternal.
+          </p>
+          <Link
+            href="/"
+            className="inline-block w-full text-center text-xs font-bold bg-orange-600 text-white py-3 rounded-xl hover:bg-orange-500 transition-colors"
+          >
             Return to Dashboard
           </Link>
         </div>
@@ -69,16 +87,19 @@ export default async function MangaDetailPage({ params, searchParams }: PageProp
 
   // ─── 💡 SMART DEDUPLICATION LOGIC (ANTI-DOUBLE) ───
   const getLangPriority = (lang: string) => {
-    if (lang === "ID") return 3; 
-    if (lang === "EN") return 2; 
-    return 1;                    
+    if (lang === "ID") return 3;
+    if (lang === "EN") return 2;
+    return 1;
   };
 
   const uniqueChaptersMap: Record<string, MangaChapter> = {};
 
   chapters.forEach((chap) => {
     const existing = uniqueChaptersMap[chap.chapter];
-    if (!existing || getLangPriority(chap.language) > getLangPriority(existing.language)) {
+    if (
+      !existing ||
+      getLangPriority(chap.language) > getLangPriority(existing.language)
+    ) {
       uniqueChaptersMap[chap.chapter] = chap;
     }
   });
@@ -93,21 +114,23 @@ export default async function MangaDetailPage({ params, searchParams }: PageProp
 
   return (
     <main className="min-h-screen bg-[#121212] text-slate-100 p-4 md:p-8 lg:p-12 transition-colors">
-      
       {/* 1. BREADCRUMBS */}
       <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-slate-500 mb-6 font-bold max-w-[1600px] mx-auto">
-        <Link href="/" className="hover:text-orange-500 transition-colors">home</Link>
+        <Link href="/" className="hover:text-orange-500 transition-colors">
+          home
+        </Link>
         <span className="text-slate-700">/</span>
-        <Link href="/" className="hover:text-orange-500 transition-colors">manga list</Link>
+        <Link href="/" className="hover:text-orange-500 transition-colors">
+          manga list
+        </Link>
         <span className="text-slate-700">/</span>
         <span className="text-slate-300 line-clamp-1">{manga.title}</span>
       </div>
 
       <div className="max-w-[1600px] mx-auto flex flex-col gap-8">
-        
         {/* 2. HERO BANNER */}
         <div className="w-full bg-[#1a1a1a] border border-slate-850 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row gap-6 md:gap-8 items-start relative overflow-hidden shadow-2xl group">
-          <div 
+          <div
             className="absolute inset-0 bg-cover bg-center blur-3xl opacity-15 pointer-events-none scale-110 transition-transform duration-700 group-hover:scale-105"
             style={{ backgroundImage: `url(${manga.cover})` }}
           />
@@ -115,7 +138,12 @@ export default async function MangaDetailPage({ params, searchParams }: PageProp
 
           <div className="w-full md:w-[200px] lg:w-[220px] aspect-[2/3] rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 shadow-xl flex-shrink-0 z-10 relative">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={manga.cover} alt={manga.title} className="object-cover w-full h-full select-none" />
+            <img
+              src={manga.cover}
+              alt={manga.title}
+              referrerPolicy="no-referrer" // 👈 BYPASS HOTLINK MANGADEX
+              className="object-cover w-full h-full select-none"
+            />
           </div>
 
           <div className="flex-1 flex flex-col justify-between h-full space-y-4 z-10 relative">
@@ -134,14 +162,16 @@ export default async function MangaDetailPage({ params, searchParams }: PageProp
               </div>
 
               <div className="space-y-2 mb-6">
-                <h3 className="text-xs font-black tracking-wider uppercase text-slate-400">Synopsis</h3>
+                <h3 className="text-xs font-black tracking-wider uppercase text-slate-400">
+                  Synopsis
+                </h3>
                 <p className="text-xs md:text-sm text-slate-300 leading-relaxed text-justify max-w-5xl">
                   {manga.description}
                 </p>
               </div>
 
               <div className="pt-2">
-                <BookmarkButton 
+                <BookmarkButton
                   mangaId={id}
                   title={manga.title}
                   coverUrl={manga.cover}
@@ -154,21 +184,31 @@ export default async function MangaDetailPage({ params, searchParams }: PageProp
 
         {/* 3. TWO COLUMN WORKSPACE */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          
           {/* KOLOM KIRI: LIST CHAPTER */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-850">
               <h2 className="text-sm font-black tracking-wider uppercase text-slate-400">
                 Daftar Chapter
               </h2>
-              
+
               <Link
                 href={`/manga/${id}?sort=${sortOrder === "asc" ? "desc" : "asc"}`}
                 className="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-orange-500 bg-[#1a1a1a] border border-slate-850 px-3 py-1.5 rounded-xl transition-all shadow-sm"
               >
                 <span>Order: {sortOrder === "asc" ? "A-Z" : "Z-A"}</span>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={`w-3.5 h-3.5 transition-transform duration-300 ${sortOrder === "desc" ? "rotate-180" : ""}`}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2.5}
+                  stroke="currentColor"
+                  className={`w-3.5 h-3.5 transition-transform duration-300 ${sortOrder === "desc" ? "rotate-180" : ""}`}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5"
+                  />
                 </svg>
               </Link>
             </div>
@@ -176,7 +216,9 @@ export default async function MangaDetailPage({ params, searchParams }: PageProp
             {/* Render Spanduk Peringatan Halus Jika API Chapter Menolak Merespons */}
             {chaptersResult.status === "rejected" && (
               <div className="p-4 bg-amber-950/40 border border-amber-800/30 rounded-2xl text-xs text-amber-400">
-                ⚠️ Layanan pemuatan chapter eksternal sedang mengalami perlambatan respons. Silakan muat ulang halaman beberapa saat lagi untuk memperbarui list.
+                ⚠️ Layanan pemuatan chapter eksternal sedang mengalami
+                perlambatan respons. Silakan muat ulang halaman beberapa saat
+                lagi untuk memperbarui list.
               </div>
             )}
 
@@ -195,9 +237,14 @@ export default async function MangaDetailPage({ params, searchParams }: PageProp
                     <div className="flex items-center gap-4">
                       <div className="w-16 h-11 rounded-xl bg-slate-900 border border-slate-800 overflow-hidden flex-shrink-0 relative shadow-inner">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={manga.cover} alt="" className="object-cover w-full h-full object-center opacity-80" />
+                        <img
+                          src={manga.cover}
+                          alt=""
+                          referrerPolicy="no-referrer" // 👈 BYPASS HOTLINK MANGADEX
+                          className="object-cover w-full h-full object-center opacity-80"
+                        />
                       </div>
-                      
+
                       <div className="flex flex-col gap-0.5">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-black text-white group-hover:text-orange-500 transition-colors">
@@ -216,8 +263,19 @@ export default async function MangaDetailPage({ params, searchParams }: PageProp
                     </div>
 
                     <div className="text-slate-600 group-hover:text-slate-400 transition-colors pr-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-3.5 h-3.5 transform group-hover:translate-x-0.5 transition-transform">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={3}
+                        stroke="currentColor"
+                        className="w-3.5 h-3.5 transform group-hover:translate-x-0.5 transition-transform"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                        />
                       </svg>
                     </div>
                   </Link>
@@ -229,22 +287,31 @@ export default async function MangaDetailPage({ params, searchParams }: PageProp
           {/* KOLOM KANAN: SIDEBAR */}
           <div className="space-y-4">
             <div className="bg-[#1a1a1a] border border-slate-850 rounded-2xl p-5 space-y-3 shadow-md">
-              <h3 className="text-xs font-black tracking-wider uppercase text-slate-400">Genre Tags</h3>
+              <h3 className="text-xs font-black tracking-wider uppercase text-slate-400">
+                Genre Tags
+              </h3>
               {manga.genres && manga.genres.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {manga.genres.map((genre: string) => (
-                    <span key={genre} className="text-[10px] font-bold bg-[#121212] border border-slate-800 text-slate-300 px-2.5 py-1.5 rounded-lg">
+                    <span
+                      key={genre}
+                      className="text-[10px] font-bold bg-[#121212] border border-slate-800 text-slate-300 px-2.5 py-1.5 rounded-lg"
+                    >
                       {genre}
                     </span>
                   ))}
                 </div>
               ) : (
-                <p className="text-xxs text-slate-500">No genre tags registered.</p>
+                <p className="text-xxs text-slate-500">
+                  No genre tags registered.
+                </p>
               )}
             </div>
 
             <div className="bg-[#1a1a1a] border border-slate-850 rounded-2xl p-5 space-y-3 shadow-md">
-              <h3 className="text-xs font-black tracking-wider uppercase text-slate-400">Last Update</h3>
+              <h3 className="text-xs font-black tracking-wider uppercase text-slate-400">
+                Last Update
+              </h3>
               <div className="w-full bg-[#121212] border border-slate-850 rounded-xl p-3.5 flex items-center justify-center gap-2 text-xs font-bold text-slate-300">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span>Updated on {manga.lastUpdate}</span>
@@ -252,22 +319,24 @@ export default async function MangaDetailPage({ params, searchParams }: PageProp
             </div>
 
             <div className="bg-[#1a1a1a] border border-slate-850 rounded-2xl p-4 flex items-center justify-between text-xs font-bold text-slate-400 shadow-md">
-              <span className="uppercase tracking-wider text-[11px]">Share</span>
+              <span className="uppercase tracking-wider text-[11px]">
+                Share
+              </span>
               <div className="flex items-center gap-2">
-                <button className="px-3 py-1.5 bg-[#121212] hover:bg-slate-800 border border-slate-800 rounded-lg text-white text-[11px] font-bold transition-colors">Twitter</button>
-                <button className="px-3 py-1.5 bg-[#121212] hover:bg-slate-800 border border-slate-800 rounded-lg text-white text-[11px] font-bold transition-colors">Facebook</button>
+                <button className="px-3 py-1.5 bg-[#121212] hover:bg-slate-800 border border-slate-800 rounded-lg text-white text-[11px] font-bold transition-colors">
+                  Twitter
+                </button>
+                <button className="px-3 py-1.5 bg-[#121212] hover:bg-slate-800 border border-slate-800 rounded-lg text-white text-[11px] font-bold transition-colors">
+                  Facebook
+                </button>
               </div>
             </div>
           </div>
-
         </div>
-        
+
         {/* Review & Rating Panel */}
         <div className="w-full mt-4">
-          <MangaReviews 
-            mangaId={id}
-            isLoggedIn={isLoggedIn}
-          />
+          <MangaReviews mangaId={id} isLoggedIn={isLoggedIn} />
         </div>
       </div>
     </main>
