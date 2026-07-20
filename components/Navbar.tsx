@@ -212,6 +212,7 @@ export default function Navbar() {
                           <img
                             src={item.cover}
                             alt={item.title}
+                            referrerPolicy="no-referrer"
                             className="object-cover w-full h-full"
                           />
                         </div>

@@ -50,7 +50,9 @@ export default function LibraryTabs({ bookmarks, histories }: LibraryTabsProps) 
         <button
           onClick={() => setActiveTab("bookmarks")}
           className={`text-sm font-bold pb-2 transition-all relative ${
-            activeTab === "bookmarks" ? "text-orange-500" : "text-neutral-500 hover:text-neutral-300"
+            activeTab === "bookmarks"
+              ? "text-orange-500"
+              : "text-neutral-500 hover:text-neutral-300"
           }`}
         >
           Favorit Saya ({bookmarks.length})
@@ -61,7 +63,9 @@ export default function LibraryTabs({ bookmarks, histories }: LibraryTabsProps) 
         <button
           onClick={() => setActiveTab("history")}
           className={`text-sm font-bold pb-2 transition-all relative ${
-            activeTab === "history" ? "text-orange-500" : "text-neutral-500 hover:text-neutral-300"
+            activeTab === "history"
+              ? "text-orange-500"
+              : "text-neutral-500 hover:text-neutral-300"
           }`}
         >
           Terakhir Dibaca ({histories.length})
@@ -77,7 +81,9 @@ export default function LibraryTabs({ bookmarks, histories }: LibraryTabsProps) 
           {bookmarks.length === 0 ? (
             <div className="text-center py-20 bg-neutral-900/10 border border-neutral-900 rounded-2xl">
               <span className="text-3xl">📭</span>
-              <p className="text-sm text-neutral-500 mt-3">Belum ada komik yang difavoritkan.</p>
+              <p className="text-sm text-neutral-500 mt-3">
+                Belum ada komik yang difavoritkan.
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
@@ -92,6 +98,7 @@ export default function LibraryTabs({ bookmarks, histories }: LibraryTabsProps) 
                     <img
                       src={manga.coverUrl}
                       alt={manga.title}
+                      referrerPolicy="no-referrer"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
@@ -113,7 +120,9 @@ export default function LibraryTabs({ bookmarks, histories }: LibraryTabsProps) 
           {histories.length === 0 ? (
             <div className="text-center py-20 bg-neutral-900/10 border border-neutral-900 rounded-2xl">
               <span className="text-3xl">🕒</span>
-              <p className="text-sm text-neutral-500 mt-3">Kamu belum membaca komik apa pun.</p>
+              <p className="text-sm text-neutral-500 mt-3">
+                Kamu belum membaca komik apa pun.
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -125,13 +134,20 @@ export default function LibraryTabs({ bookmarks, histories }: LibraryTabsProps) 
                   {/* Cover */}
                   <div className="w-16 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-neutral-950 relative">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={item.coverUrl} alt={item.title} className="w-full h-full object-cover" />
+                    <img
+                      src={item.coverUrl}
+                      alt={item.title}
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
 
                   {/* Meta Data */}
                   <div className="flex flex-col justify-between flex-grow min-w-0">
                     <div>
-                      <h3 className="text-xs font-black text-white truncate">{item.title}</h3>
+                      <h3 className="text-xs font-black text-white truncate">
+                        {item.title}
+                      </h3>
                       <p className="text-[10px] text-neutral-500 mt-1">
                         Dibaca: {formatTime(item.updatedAt)}
                       </p>
