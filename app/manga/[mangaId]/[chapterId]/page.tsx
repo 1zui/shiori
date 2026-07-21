@@ -33,7 +33,7 @@ export default async function ChapterReaderPage({ params }: ChapterPageProps) {
 
   if (!manga) {
     return (
-      <div className="p-10 text-center text-slate-400">
+      <div className="min-h-screen bg-slate-50 dark:bg-[#09090b] flex items-center justify-center p-10 text-center text-slate-500 dark:text-slate-400 text-xs font-semibold">
         Manga data template untraceable.
       </div>
     );
@@ -74,21 +74,21 @@ export default async function ChapterReaderPage({ params }: ChapterPageProps) {
       : null;
 
   return (
-    <main className="min-h-screen bg-[#09090b] text-slate-200 p-4 flex flex-col items-center">
+    <main className="min-h-screen bg-slate-100 dark:bg-[#09090b] text-slate-800 dark:text-slate-200 p-4 flex flex-col items-center transition-colors duration-200">
       {/* 1. TOP NAVIGATION CONTROLS */}
-      <header className="w-full max-w-3xl border-b border-neutral-900 pb-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <header className="w-full max-w-3xl border-b border-slate-200 dark:border-neutral-900 pb-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="text-center sm:text-left">
           <Link
             href={`/manga/${mangaId}`}
-            className="text-xs font-bold text-orange-500 hover:underline"
+            className="text-xs font-bold text-orange-600 dark:text-orange-500 hover:underline"
           >
             ← Kembali ke Detail
           </Link>
-          <h1 className="text-sm font-black text-white mt-0.5 line-clamp-1">
+          <h1 className="text-sm font-black text-slate-900 dark:text-white mt-0.5 line-clamp-1">
             {manga.title}
           </h1>
           {currentChapter && (
-            <p className="text-[11px] text-neutral-400 font-bold">
+            <p className="text-[11px] text-slate-500 dark:text-neutral-400 font-bold">
               Chapter {currentChapter.chapter} [{currentChapter.language}]
             </p>
           )}
@@ -99,12 +99,12 @@ export default async function ChapterReaderPage({ params }: ChapterPageProps) {
           {prevChapter ? (
             <Link
               href={`/manga/${mangaId}/${prevChapter.id}`}
-              className="px-4 py-2 bg-[#121215] border border-neutral-850 rounded-xl text-xs font-bold hover:bg-neutral-800 transition-colors"
+              className="px-4 py-2 bg-white dark:bg-[#121215] border border-slate-200 dark:border-neutral-850 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors shadow-sm dark:shadow-none"
             >
               Prev
             </Link>
           ) : (
-            <span className="px-4 py-2 bg-neutral-900/40 border border-neutral-900 rounded-xl text-xs font-bold text-neutral-600 cursor-not-allowed">
+            <span className="px-4 py-2 bg-slate-200/60 dark:bg-neutral-900/40 border border-slate-200 dark:border-neutral-900 rounded-xl text-xs font-bold text-slate-400 dark:text-neutral-600 cursor-not-allowed">
               Prev
             </span>
           )}
@@ -112,12 +112,12 @@ export default async function ChapterReaderPage({ params }: ChapterPageProps) {
           {nextChapter ? (
             <Link
               href={`/manga/${mangaId}/${nextChapter.id}`}
-              className="px-5 py-2 bg-orange-650 hover:bg-orange-600 rounded-xl text-xs font-black text-white transition-colors shadow-md shadow-orange-950/20"
+              className="px-5 py-2 bg-orange-600 hover:bg-orange-500 rounded-xl text-xs font-black text-white transition-colors shadow-md shadow-orange-500/10 dark:shadow-orange-950/20"
             >
               Next Chapter →
             </Link>
           ) : (
-            <span className="px-5 py-2 bg-neutral-900/40 border border-neutral-900 rounded-xl text-xs font-black text-neutral-600 cursor-not-allowed">
+            <span className="px-5 py-2 bg-slate-200/60 dark:bg-neutral-900/40 border border-slate-200 dark:border-neutral-900 rounded-xl text-xs font-black text-slate-400 dark:text-neutral-600 cursor-not-allowed">
               End Chapter
             </span>
           )}
@@ -125,9 +125,9 @@ export default async function ChapterReaderPage({ params }: ChapterPageProps) {
       </header>
 
       {/* 2. MANGA IMAGES CONTENT LAYOUT */}
-      <div className="flex flex-col gap-1 max-w-3xl w-full bg-[#050507] p-1 rounded-2xl border border-neutral-950 shadow-2xl">
+      <div className="flex flex-col gap-1 max-w-3xl w-full bg-white dark:bg-[#050507] p-1 rounded-2xl border border-slate-200/80 dark:border-neutral-950 shadow-md dark:shadow-2xl transition-colors">
         {images.length === 0 ? (
-          <div className="text-center py-20 text-xs text-neutral-500">
+          <div className="text-center py-20 text-xs text-slate-400 dark:text-neutral-500">
             Gagal mengambil lembar gambar. Silakan muat ulang halaman.
           </div>
         ) : (
@@ -146,8 +146,8 @@ export default async function ChapterReaderPage({ params }: ChapterPageProps) {
       </div>
 
       {/* 3. BOTTOM NAVIGATION CONTROLS (FOOTER) */}
-      <footer className="w-full max-w-3xl border-t border-neutral-900 pt-6 mt-8 flex flex-col items-center gap-4 pb-12">
-        <p className="text-xs text-neutral-500 font-bold">
+      <footer className="w-full max-w-3xl border-t border-slate-200 dark:border-neutral-900 pt-6 mt-8 flex flex-col items-center gap-4 pb-12">
+        <p className="text-xs text-slate-500 dark:text-neutral-500 font-bold">
           Kamu telah selesai membaca bab ini.
         </p>
 
@@ -155,7 +155,7 @@ export default async function ChapterReaderPage({ params }: ChapterPageProps) {
           {prevChapter && (
             <Link
               href={`/manga/${mangaId}/${prevChapter.id}`}
-              className="px-6 py-3 bg-[#121215] border border-neutral-850 rounded-xl text-xs font-bold hover:bg-neutral-800 transition-colors"
+              className="px-6 py-3 bg-white dark:bg-[#121215] border border-slate-200 dark:border-neutral-850 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors shadow-sm dark:shadow-none"
             >
               ← Bab Sebelumnya
             </Link>
@@ -163,7 +163,7 @@ export default async function ChapterReaderPage({ params }: ChapterPageProps) {
 
           <Link
             href={`/manga/${mangaId}`}
-            className="px-6 py-3 bg-neutral-900 border border-neutral-850 rounded-xl text-xs font-bold text-neutral-400 hover:text-white transition-colors"
+            className="px-6 py-3 bg-slate-200/80 dark:bg-neutral-900 border border-slate-300 dark:border-neutral-850 rounded-xl text-xs font-bold text-slate-700 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white transition-colors"
           >
             Daftar Bab
           </Link>
@@ -171,12 +171,12 @@ export default async function ChapterReaderPage({ params }: ChapterPageProps) {
           {nextChapter ? (
             <Link
               href={`/manga/${mangaId}/${nextChapter.id}`}
-              className="px-8 py-3 bg-orange-650 hover:bg-orange-600 rounded-xl text-xs font-black text-white transition-colors shadow-lg shadow-orange-950/30"
+              className="px-8 py-3 bg-orange-600 hover:bg-orange-500 rounded-xl text-xs font-black text-white transition-colors shadow-lg shadow-orange-500/20 dark:shadow-orange-950/30"
             >
               Lanjut Chapter →
             </Link>
           ) : (
-            <span className="px-8 py-3 bg-neutral-900/40 border border-neutral-900 rounded-xl text-xs font-black text-neutral-600 cursor-not-allowed">
+            <span className="px-8 py-3 bg-slate-200/60 dark:bg-neutral-900/40 border border-slate-200 dark:border-neutral-900 rounded-xl text-xs font-black text-slate-400 dark:text-neutral-600 cursor-not-allowed">
               Bab Terakhir
             </span>
           )}

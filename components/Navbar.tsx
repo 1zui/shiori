@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import LogoutButton from "@/components/LogoutButton"; // 🎯 1. Import komponen LogoutButton
 
 interface SearchPreviewItem {
   id: string;
@@ -293,12 +294,13 @@ export default function Navbar() {
                     </span>
                   </span>
                 </Link>
-                <button
-                  onClick={() => signOut({ callbackUrl: "/" })}
-                  className="text-xs font-bold bg-slate-100 dark:bg-neutral-950 hover:bg-red-500/10 hover:text-red-500 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-neutral-850 px-4 py-2 rounded-xl transition-all active:scale-95"
-                >
-                  Sign Out
-                </button>
+
+                {/* 🎯 2. Wraps Desktop Sign Out with LogoutButton */}
+                <LogoutButton>
+                  <button className="text-xs font-bold bg-slate-100 dark:bg-neutral-950 hover:bg-red-500/10 hover:text-red-500 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-neutral-850 px-4 py-2 rounded-xl transition-all active:scale-95 cursor-pointer">
+                    Sign Out
+                  </button>
+                </LogoutButton>
               </div>
             ) : (
               <Link
@@ -435,15 +437,16 @@ export default function Navbar() {
                 </div>
                 <span className="truncate">Profile Saya ({cleanedName})</span>
               </Link>
-              <button
-                onClick={() => {
-                  setIsOpen(false);
-                  signOut({ callbackUrl: "/" });
-                }}
-                className="bg-red-500/10 border border-red-500/20 text-red-500 px-4 py-2 rounded-xl text-center mt-2 font-bold text-xs hover:bg-red-500/20 transition-colors"
-              >
-                Sign Out
-              </button>
+
+              {/* 🎯 3. Wraps Mobile Sign Out with LogoutButton */}
+              <LogoutButton>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="w-full bg-red-500/10 border border-red-500/20 text-red-500 px-4 py-2 rounded-xl text-center mt-2 font-bold text-xs hover:bg-red-500/20 transition-colors cursor-pointer"
+                >
+                  Sign Out
+                </button>
+              </LogoutButton>
             </>
           ) : (
             <Link
